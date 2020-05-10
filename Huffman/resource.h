@@ -11,7 +11,6 @@
 #define IDC_CANCEL                      1012
 #define IDC_TIPS                        1013
 #define IDC_Detail                      1014
-#define IDC_CUSTOM1                     1014
 #define IDC_DETAIL_TABLE                1014
 
 // Next default values for new objects
@@ -20,7 +19,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

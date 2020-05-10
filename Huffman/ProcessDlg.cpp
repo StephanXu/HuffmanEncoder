@@ -172,6 +172,11 @@ void ProcessDlg::OnClose()
 void ProcessDlg::OnBnClickedDetail()
 {
 	auto pos = m_ProcessList.GetFirstSelectedItemPosition();
+	if (!pos)
+	{
+		MessageBox(_T("Please select a file"));
+		return;
+	}
 	while (pos)
 	{
 		int index = m_ProcessList.GetNextSelectedItem(pos);
@@ -196,26 +201,32 @@ void ProcessDlg::OnBnClickedDetail()
 			"SHA256",
 			picosha2::bytes_to_hex_string(metaData.m_FileHash, metaData.m_FileHash + sizeof(metaData.m_FileHash))
 		});
-		std::stringstream ss;
+		for (size_t i{}; i < 3; ++i)details.push_back({"", ""});
+		details.push_back({"Character", "Encode"});
 		for (const auto& item : huffmanTable)
 		{
+			std::stringstream ss;
+			std::string strChar;
+			std::string strEncode;
 			if ((static_cast<int>(item.first) & 0x80) == 0x80)
 			{
-				ss << "0x" << std::hex << static_cast<int>(item.first);
+				ss << "0x" << std::hex << (static_cast<int>(item.first) & 0xff);
 			}
 			else
 			{
 				ss << item.first;
 			}
-			ss << " -> ";
+			strChar = ss.str();
+			ss.str("");
 			auto [bitLength, encode] = item.second;
 			for (int i{}; i < static_cast<int>(bitLength); ++i)
 			{
 				ss << ((encode & (0 | (1 << i))) >> i);
 			}
-			ss << "\n";
+			strEncode = ss.str();
+
+			details.push_back({strChar, strEncode});
 		}
-		details.push_back({"Encode Table", ss.str()});
 
 		auto dialog = new FileDetailDlg();
 		dialog->Create(IDD_FILE_DETAIL);
