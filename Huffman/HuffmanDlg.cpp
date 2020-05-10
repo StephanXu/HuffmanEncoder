@@ -108,18 +108,21 @@ HCURSOR CHuffmanDlg::OnQueryDragIcon()
 void CHuffmanDlg::OnDropFiles(HDROP hDropInfo)
 {
 	std::vector<std::string> vwcFileName;
-	auto DropCount = DragQueryFileA(hDropInfo, -1, NULL, 0);
+	auto DropCount = DragQueryFile(hDropInfo, -1, NULL, 0);
 
 	for (unsigned int i = 0; i < DropCount; i++)
 	{
-		CHAR wcStr[MAX_PATH];
-		DragQueryFileA(hDropInfo, i, wcStr, MAX_PATH);
+		TCHAR wcStr[MAX_PATH];
+		DragQueryFile(hDropInfo, i, wcStr, MAX_PATH);
 		std::string fileName{wcStr};
 		if (std::filesystem::is_directory(wcStr))
 		{
 			for (const auto& item : std::filesystem::recursive_directory_iterator(fileName))
 			{
-				vwcFileName.push_back(item.path().string());
+				if (!item.is_directory())
+				{
+					vwcFileName.push_back(item.path().string());
+				}
 			}
 		}
 		else
