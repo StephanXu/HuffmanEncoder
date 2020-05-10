@@ -28,6 +28,13 @@ public:
 	using HuffmanTableMap = std::unordered_map<char, std::tuple<size_t, unsigned int>>;
 	using HuffmanTableDecodeMap = std::unordered_map<size_t, std::unordered_map<unsigned int, char>>;
 
+	struct SerializedHuffmanTableMetaData
+	{
+		uint64_t m_TableLength;
+		uint8_t m_RedundancyBit;
+		uint8_t m_FileHash[picosha2::k_digest_size];
+	};
+
 	static auto Encode(const std::string& sourceFilename, const std::string& destination) -> void;
 
 	static auto Encode(std::istream& source, std::ostream& destination) -> void;
@@ -39,6 +46,10 @@ public:
 	static auto Verify(const std::string& sourceFilename, const std::vector<unsigned char>& digest) -> bool;
 
 	static auto Verify(std::istream& source, const std::vector<unsigned char>& digest) -> bool;
+
+	static auto GetMetaData(std::istream& source)->std::tuple<SerializedHuffmanTableMetaData, HuffmanTableMap>;
+
+	static auto GetMetaData(const std::string& filename)->std::tuple<SerializedHuffmanTableMetaData, HuffmanTableMap>;
 
 private:
 	static auto GetFrequencyAndHash(std::istream& fileStream)
@@ -59,13 +70,6 @@ private:
 		uint8_t m_Character;
 		uint8_t m_BitLength;
 		uint16_t m_Encode;
-	};
-
-	struct SerializedHuffmanTableMetaData
-	{
-		uint64_t m_TableLength;
-		uint8_t m_RedundancyBit;
-		uint8_t m_FileHash[picosha2::k_digest_size];
 	};
 
 	static auto SerializeHuffmanTable(const HuffmanTableMap& huffmanTable) -> std::vector<uint8_t>;

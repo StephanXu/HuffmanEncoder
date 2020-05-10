@@ -13,6 +13,14 @@ auto HuffmanEncoder::Encode(const std::string& sourceFilename, const std::string
 {
 	std::ifstream fs{sourceFilename, std::ios::in | std::ios::binary};
 	std::ofstream output{destination, std::ios::out | std::ios::binary};
+	if (!fs.is_open())
+	{
+		throw std::runtime_error("Encode: Can't open source file");
+	}
+	if (!output.is_open())
+	{
+		throw std::runtime_error("Encode: Can't open output file");
+	}
 	Encode(fs, output);
 }
 
@@ -61,7 +69,7 @@ auto HuffmanEncoder::Encode(std::istream& source, std::ostream& destination) -> 
 	writeBuffer.push_back(bitCollector.Unpacked());
 	destination.write(reinterpret_cast<const char*>(writeBuffer.data()), writeBuffer.size());
 	writeBuffer.clear();
-	
+
 	// Update meta data.
 	metaData.m_RedundancyBit = static_cast<uint8_t>(bitCollector.RedundancyBit());
 	destination.seekp(std::ios::beg);
@@ -73,6 +81,14 @@ auto HuffmanEncoder::Decode(const std::string& sourceFilename,
 {
 	std::ifstream fs{sourceFilename, std::ios::in | std::ios::binary};
 	std::ofstream output{destination, std::ios::out | std::ios::binary};
+	if (!fs.is_open())
+	{
+		throw std::runtime_error("Decode: Can't open source file");
+	}
+	if (!output.is_open())
+	{
+		throw std::runtime_error("Decode: Can't open output file");
+	}
 	return Decode(fs, output);
 }
 
@@ -148,6 +164,10 @@ auto HuffmanEncoder::Decode(std::istream& source, std::ostream& destination) -> 
 auto HuffmanEncoder::Verify(const std::string& sourceFilename, const std::vector<unsigned char>& digest) -> bool
 {
 	std::ifstream fs{sourceFilename, std::ios::in | std::ios::binary};
+	if (!fs.is_open())
+	{
+		throw std::runtime_error("Verify: Can't open file");
+	}
 	return Verify(fs, digest);
 }
 
@@ -170,6 +190,33 @@ auto HuffmanEncoder::Verify(std::istream& source, const std::vector<unsigned cha
 		}
 	}
 	return true;
+}
+
+auto HuffmanEncoder::GetMetaData(std::istream& source) -> std::tuple<SerializedHuffmanTableMetaData, HuffmanTableMap>
+{
+	auto result                    = std::make_tuple(SerializedHuffmanTableMetaData{}, HuffmanTableMap{});
+	auto& [metaData, huffmanTable] = result;
+
+	// Get meta data
+	source.read(reinterpret_cast<char*>(&metaData), sizeof(SerializedHuffmanTableMetaData));
+
+	// UnSerialize huffman table
+	std::vector<uint8_t> huffmanTableBuffer(metaData.m_TableLength);
+	source.read(reinterpret_cast<char*>(huffmanTableBuffer.data()), metaData.m_TableLength);
+	huffmanTable = UnSerializeHuffmanTable(huffmanTableBuffer);
+
+	return result;
+}
+
+auto HuffmanEncoder::GetMetaData(
+	const std::string& filename) -> std::tuple<SerializedHuffmanTableMetaData, HuffmanTableMap>
+{
+	std::ifstream fs(filename, std::ios::in | std::ios::binary);
+	if (!fs.is_open())
+	{
+		throw std::runtime_error("GetMetaData: Can't open file");
+	}
+	return GetMetaData(fs);
 }
 
 auto HuffmanEncoder::GetFrequencyAndHash(

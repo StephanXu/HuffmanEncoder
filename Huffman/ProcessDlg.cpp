@@ -7,15 +7,25 @@
 #include "afxdialogex.h"
 #include "HuffmanEncoder.h"
 #include "Utils.h"
+#include "FileDetailDlg.h"
+#include "Sha256.h"
+
+#include <vector>
+#include <tuple>
 
 // ProcessDlg dialog
 
 IMPLEMENT_DYNAMIC(ProcessDlg, CDialogEx)
 
+const int kFilename               = 0;
+const int kSourceColumn           = 1;
+const int kDestColumn             = 2;
+const int kCompressionRatioColumn = 3;
+const int kStatusColumn           = 4;
+
 ProcessDlg::ProcessDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_PROCESS_DIALOG, pParent)
 {
-
 }
 
 ProcessDlg::~ProcessDlg()
@@ -23,8 +33,8 @@ ProcessDlg::~ProcessDlg()
 }
 
 auto ProcessDlg::ProcessProc(ProcessDlg& dialog,
-							 SafeQueue<ProcessUnit>& queue,
-							 const bool& cancellationFlag)
+                             SafeQueue<ProcessUnit>& queue,
+                             const bool& cancellationFlag)
 {
 	ProcessUnit unit;
 	short count = 0;
@@ -33,27 +43,27 @@ auto ProcessDlg::ProcessProc(ProcessDlg& dialog,
 	{
 		queue.WaitAndPop(unit, cancellationFlag);
 		auto index = ProcessDlg::FindListItem(dialog.m_ProcessList, 1, CString(unit.Source().c_str()));
-		dialog.m_ProcessList.SetItemText(index, 4, _T("Processing..."));
+		dialog.m_ProcessList.SetItemText(index, kStatusColumn, _T("Processing..."));
 		dialog.m_TipText.SetWindowText(CString("Processing: ") + CString(GetFilenameFromPath(unit.Source()).c_str()));
 
 		if (unit.m_IsEncode)
 		{
 			HuffmanEncoder::Encode(unit.Source(), unit.Destination());
 			auto sourceLength = GetFileLength(unit.Source());
-			auto destLength = GetFileLength(unit.Destination());
-			auto compRatio = (destLength * 100) / sourceLength;
+			auto destLength   = GetFileLength(unit.Destination());
+			auto compRatio    = (destLength * 100) / sourceLength;
 
 			CString ratio;
 			ratio.Format(_T("%d%%"), compRatio);
-			dialog.m_ProcessList.SetItemText(index, 3, ratio);
-			dialog.m_ProcessList.SetItemText(index, 4, _T("Encoded"));
+			dialog.m_ProcessList.SetItemText(index, kCompressionRatioColumn, ratio);
+			dialog.m_ProcessList.SetItemText(index, kStatusColumn, _T("Encoded"));
 		}
 		else
 		{
 			auto digest = HuffmanEncoder::Decode(unit.Source(), unit.Destination());
 			auto verify = HuffmanEncoder::Verify(unit.Destination(), digest);
-			dialog.m_ProcessList.SetItemText(index, 3, _T("-"));
-			dialog.m_ProcessList.SetItemText(index, 4, verify ? _T("Decoded") : _T("Verify failed"));
+			dialog.m_ProcessList.SetItemText(index, kCompressionRatioColumn, _T("-"));
+			dialog.m_ProcessList.SetItemText(index, kStatusColumn, verify ? _T("Decoded") : _T("Verify failed"));
 		}
 		dialog.m_ProgressBar.SetPos(++count);
 	}
@@ -68,14 +78,15 @@ auto ProcessDlg::StartProcess() -> void
 		return;
 	}
 	m_Thread.reset(new std::thread(
-		[this]() {
+		[this]()
+		{
 			ProcessProc(*this, m_Queue, m_CancellationFlag);
 		}));
 }
 
 auto ProcessDlg::GetFileLength(const std::string& filename) -> std::streampos
 {
-	std::ifstream f{ filename, std::ios::in };
+	std::ifstream f{filename, std::ios::in};
 	f.seekg(0, std::ios::end);
 	return f.tellg();
 }
@@ -95,6 +106,7 @@ BEGIN_MESSAGE_MAP(ProcessDlg, CDialogEx)
 	ON_WM_NCDESTROY()
 	ON_WM_CLOSE()
 	ON_MESSAGE(WM_SAFE_DESTORY, OnSafeDestroy)
+	ON_BN_CLICKED(IDC_Detail, &ProcessDlg::OnBnClickedDetail)
 END_MESSAGE_MAP()
 
 
@@ -102,18 +114,27 @@ BOOL ProcessDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	m_ProcessList.InsertColumn(0, _T("Name"), LVCFMT_LEFT, 90);
-	m_ProcessList.InsertColumn(1, _T("File Address"), LVCFMT_LEFT, 90);
-	m_ProcessList.InsertColumn(2, _T("Destination"), LVCFMT_LEFT, 90);
-	m_ProcessList.InsertColumn(3, _T("Compression Ratio"), LVCFMT_LEFT, 90);
-	m_ProcessList.InsertColumn(4, _T("Status"), LVCFMT_LEFT, 90);
+	m_ProcessList.InsertColumn(kFilename, _T("Name"), LVCFMT_LEFT, 90);
+	m_ProcessList.InsertColumn(kSourceColumn, _T("File Address"), LVCFMT_LEFT, 90);
+	m_ProcessList.InsertColumn(kDestColumn, _T("Destination"), LVCFMT_LEFT, 90);
+	m_ProcessList.InsertColumn(kCompressionRatioColumn, _T("Compression Ratio"), LVCFMT_LEFT, 90);
+	m_ProcessList.InsertColumn(kStatusColumn, _T("Status"), LVCFMT_LEFT, 90);
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE; // return TRUE  unless you set the focus to a control
 }
 
 // ProcessDlg message handlers
 
 
+void ProcessDlg::OnOK()
+{
+	return;
+}
+
+void ProcessDlg::OnCancel()
+{
+	return;
+}
 
 void ProcessDlg::OnBnClickedCancel()
 {
@@ -138,11 +159,68 @@ void ProcessDlg::OnClose()
 	m_TipText.SetWindowText(_T("Canceling"));
 
 	std::thread(
-		[this]() {
+		[this]()
+		{
 			m_CancellationFlag = true;
 			m_Thread->join();
 			m_Thread = nullptr;
 
 			PostMessage(WM_SAFE_DESTORY, 0, 0);
 		}).detach();
+}
+
+void ProcessDlg::OnBnClickedDetail()
+{
+	auto pos = m_ProcessList.GetFirstSelectedItemPosition();
+	while (pos)
+	{
+		int index = m_ProcessList.GetNextSelectedItem(pos);
+
+		auto csSource = m_ProcessList.GetItemText(index, kSourceColumn);
+		auto csDest   = m_ProcessList.GetItemText(index, kDestColumn);
+		auto csStatus = m_ProcessList.GetItemText(index, kStatusColumn);
+		auto isEncode = 0 == csStatus.Compare(_T("Encoded"));
+
+		if (0 != csStatus.Compare(_T("Encoded")) && 0 != csStatus.Compare(_T("Decoded")))
+		{
+			MessageBox(_T("The process have not finished yet."));
+			return;
+		}
+
+		std::vector<std::tuple<std::string, std::string>> details;
+		details.push_back({"Filename", csSource.GetString()});
+		auto [metaData, huffmanTable] = HuffmanEncoder::GetMetaData(isEncode
+			                                                            ? csDest.GetString()
+			                                                            : csSource.GetString());
+		details.push_back({
+			"SHA256",
+			picosha2::bytes_to_hex_string(metaData.m_FileHash, metaData.m_FileHash + sizeof(metaData.m_FileHash))
+		});
+		std::stringstream ss;
+		for (const auto& item : huffmanTable)
+		{
+			if ((static_cast<int>(item.first) & 0x80) == 0x80)
+			{
+				ss << "0x" << std::hex << static_cast<int>(item.first);
+			}
+			else
+			{
+				ss << item.first;
+			}
+			ss << " -> ";
+			auto [bitLength, encode] = item.second;
+			for (int i{}; i < static_cast<int>(bitLength); ++i)
+			{
+				ss << ((encode & (0 | (1 << i))) >> i);
+			}
+			ss << "\n";
+		}
+		details.push_back({"Encode Table", ss.str()});
+
+		auto dialog = new FileDetailDlg();
+		dialog->Create(IDD_FILE_DETAIL);
+		dialog->SetFileDetail(details);
+		dialog->SetWindowText(("File Detail: " + GetFilenameFromPath(csSource.GetString())).c_str());
+		dialog->ShowWindow(SW_SHOW);
+	}
 }

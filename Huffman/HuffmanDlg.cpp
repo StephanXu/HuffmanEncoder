@@ -1,4 +1,3 @@
-
 // HuffmanDlg.cpp : implementation file
 //
 
@@ -50,12 +49,23 @@ BOOL CHuffmanDlg::OnInitDialog()
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+	SetIcon(m_hIcon, TRUE);  // Set big icon
+	SetIcon(m_hIcon, FALSE); // Set small icon
 
 	// TODO: Add extra initialization here
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	return TRUE; // return TRUE  unless you set the focus to a control
+}
+
+void CHuffmanDlg::OnOK()
+{
+	
+	return;
+}
+
+void CHuffmanDlg::OnCancel()
+{
+	CDialog::OnCancel();
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -104,10 +114,10 @@ void CHuffmanDlg::OnDropFiles(HDROP hDropInfo)
 	{
 		CHAR wcStr[MAX_PATH];
 		DragQueryFileA(hDropInfo, i, wcStr, MAX_PATH);
-		std::string fileName{ wcStr };
+		std::string fileName{wcStr};
 		if (std::filesystem::is_directory(wcStr))
 		{
-			for (const auto& item : std::filesystem::recursive_directory_iterator(fileName)) 
+			for (const auto& item : std::filesystem::recursive_directory_iterator(fileName))
 			{
 				vwcFileName.push_back(item.path().string());
 			}
@@ -118,17 +128,16 @@ void CHuffmanDlg::OnDropFiles(HDROP hDropInfo)
 		}
 	}
 	std::vector<ProcessUnit> tasks;
-	
-	const std::string defaultPrefix{ ".huff" };
+
+	const std::string defaultPrefix{".huff"};
 	for (auto&& item : vwcFileName)
 	{
 		const auto isEncode = !(0 == item.substr(item.rfind('.'), 256).compare(defaultPrefix));
-		auto targetFile = isEncode ? item + ".huff" : item.substr(0, item.length() - defaultPrefix.length());
+		auto targetFile     = isEncode ? item + ".huff" : item.substr(0, item.length() - defaultPrefix.length());
 
 		if (std::filesystem::exists(targetFile))
 		{
-			const auto result = MessageBoxA(
-				0,
+			const auto result = MessageBox(
 				("The file \"" + targetFile + "\" is exists. Would you like to override it?").c_str(),
 				"Collision warning",
 				MB_YESNO);
@@ -137,7 +146,7 @@ void CHuffmanDlg::OnDropFiles(HDROP hDropInfo)
 				continue;
 			}
 		}
-		tasks.push_back({ isEncode,item, targetFile});
+		tasks.push_back({isEncode, item, targetFile});
 	}
 
 	if (tasks.size() > 0)

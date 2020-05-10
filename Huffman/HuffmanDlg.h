@@ -1,4 +1,3 @@
-
 // HuffmanDlg.h : header file
 //
 
@@ -8,27 +7,29 @@
 // CHuffmanDlg dialog
 class CHuffmanDlg : public CDialogEx
 {
-// Construction
+	// Construction
 public:
-	CHuffmanDlg(CWnd* pParent = nullptr);	// standard constructor
+	CHuffmanDlg(CWnd* pParent = nullptr); // standard constructor
 
-// Dialog Data
+	// Dialog Data
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_HUFFMAN_DIALOG };
 #endif
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+protected:
+	virtual void DoDataExchange(CDataExchange* pDX); // DDX/DDV support
 
 
-// Implementation
+	// Implementation
 protected:
 	HICON m_hIcon;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
+	afx_msg void OnOK();
+	afx_msg void OnCancel();
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnDropFiles(HDROP hDropInfo);
-	DECLARE_MESSAGE_MAP()
+DECLARE_MESSAGE_MAP()
 };

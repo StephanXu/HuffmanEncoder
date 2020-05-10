@@ -53,7 +53,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -187,10 +187,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BitCollector.h" />
+    <ClInclude Include="FileDetailDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Huffman.h" />
     <ClInclude Include="HuffmanDlg.h" />
     <ClInclude Include="HuffmanEncoder.h" />
+    <ClInclude Include="MultilineList.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="ProcessDlg.h" />
     <ClInclude Include="ProcessUnit.h" />
@@ -201,9 +203,11 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FileDetailDlg.cpp" />
     <ClCompile Include="Huffman.cpp" />
     <ClCompile Include="HuffmanDlg.cpp" />
     <ClCompile Include="HuffmanEncoder.cpp" />
+    <ClCompile Include="MultilineList.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
