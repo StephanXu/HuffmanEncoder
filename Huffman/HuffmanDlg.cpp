@@ -59,7 +59,6 @@ BOOL CHuffmanDlg::OnInitDialog()
 
 void CHuffmanDlg::OnOK()
 {
-	
 	return;
 }
 
@@ -135,8 +134,10 @@ void CHuffmanDlg::OnDropFiles(HDROP hDropInfo)
 	const std::string defaultPrefix{".huff"};
 	for (auto&& item : vwcFileName)
 	{
-		const auto isEncode = !(0 == item.substr(item.rfind('.'), 256).compare(defaultPrefix));
-		auto targetFile     = isEncode ? item + ".huff" : item.substr(0, item.length() - defaultPrefix.length());
+		const auto prefixPos = item.rfind('.');
+		const auto isEncode  = prefixPos == std::string::npos
+		                       || !(0 == item.substr(prefixPos, 256).compare(defaultPrefix));
+		auto targetFile = isEncode ? item + ".huff" : item.substr(0, item.length() - defaultPrefix.length());
 
 		if (std::filesystem::exists(targetFile))
 		{
