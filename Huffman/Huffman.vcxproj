@@ -203,6 +203,7 @@
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BitCollector.cpp" />
     <ClCompile Include="FileDetailDlg.cpp" />
     <ClCompile Include="Huffman.cpp" />
     <ClCompile Include="HuffmanDlg.cpp" />
