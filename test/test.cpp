@@ -1,9 +1,10 @@
-#include "pch.h"
-#include "../Huffman/HuffmanEncoder.h"
-#include "../Huffman/Sha256.h"
-#include "../Huffman/BitCollector.h"
+#include <gtest/gtest.h>
 
 #include <filesystem>
+
+#include "../src/HuffmanEncoder.h"
+#include "../src/Sha256.h"
+#include "../src/BitCollector.h"
 
 TEST(GeneralTest, HuffmanTableBuilderTest)
 {
